@@ -42,15 +42,15 @@ python manage.py migrate_schemas --shared
 
 ## Project Structure
 
-- `shared_app/` — public schema models: `Client`, `Domain`; shared API at `/api/`
-- `tenant_app/` — per-tenant models: `Member`; tenant API at `/client/{domain}/api/`
-- `starterapp/` — Django settings and URL configuration
+- `shared_app/` — public schema models: `Client`, `Domain`, `Region` (region registry); shared API at `/api/`
+- `tenant_app/` — per-tenant models: `Member` (has `region_id`); region-scoped tenant API at `/client/{domain}/region/{region_id}/api/`
+- `starterapp/` — Django settings, URL configuration, and `RegionMiddleware`
 
 ## Key URLs
 
 - `http://localhost:8000/api/docs` — shared API docs
-- `http://localhost:8000/client/{domain}/api/docs` — tenant API docs
-- `http://localhost:8000/admin/` — public schema admin
+- `http://localhost:8000/client/{domain}/region/{region_id}/api/docs` — region-scoped tenant API docs
+- `http://localhost:8000/admin/` — public schema admin (manage `Region` here)
 - `http://localhost:8000/client/tenant1/admin/` — tenant1 admin
 
 ## Architecture Notes

@@ -55,17 +55,24 @@ python manage.py runserver
 - `GET /api/domains` - List all domains
 
 ### Client API (Tenant-specific)
-- `GET /client/{domain}/api/members` - List members
-- `POST /client/{domain}/api/members` - Create member
-- `GET /client/{domain}/api/members/{id}` - Get member detail
-- `PUT /client/{domain}/api/members/{id}` - Update member
-- `DELETE /client/{domain}/api/members/{id}` - Delete member
+
+All tenant member endpoints are scoped to a region via the URL. The `{region_id}`
+must be an active region in the registry and match the member's region, otherwise
+the request is rejected with `400`. `region_id` is also a required field on the
+create/update request body.
+
+- `GET /client/{domain}/region/{region_id}/api/members` - List members (in this region)
+- `POST /client/{domain}/region/{region_id}/api/members` - Create member
+- `GET /client/{domain}/region/{region_id}/api/members/{id}` - Get member detail
+- `PUT /client/{domain}/region/{region_id}/api/members/{id}` - Update member
+- `DELETE /client/{domain}/region/{region_id}/api/members/{id}` - Delete member
 
 ### API docs:
 - `http://localhost:8000/api/docs` - Shared API docs
-- `http://localhost:8000/client/{domain}/api/docs` - Client API docs
+- `http://localhost:8000/client/{domain}/region/{region_id}/api/docs` - Client API docs (region-scoped)
 
-Note: The API docs support testing the API endpoints.
+Note: The API docs support testing the API endpoints. Because the region is part
+of the docs URL, "Try it out" calls are automatically scoped to that region.
 
 ## Structure
 
