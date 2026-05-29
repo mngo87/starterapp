@@ -6,8 +6,11 @@ from django_tenants.utils import get_public_schema_name
 
 # Assuming your tenant model is Client from shared_app
 # Adjust imports based on your actual project structure
-from shared_app.models import Client as Tenant, Domain
+from shared_app.models import Client as Tenant, Domain, Region
 from ..models import Member
+
+# Region every test tenant/member is scoped to (must exist in the registry).
+TEST_REGION = 'us-east'
 
 @pytest.fixture(scope='function') # Use 'function' scope for isolation between tests
 def test_tenant(db, django_db_blocker):
@@ -19,6 +22,8 @@ def test_tenant(db, django_db_blocker):
     connection.set_schema_to_public()
     tenant_domain = 'test' # Define domain here to reuse
     with django_db_blocker.unblock():
+        # Ensure the region this tenant is scoped to exists in the registry
+        Region.objects.get_or_create(code=TEST_REGION, defaults={'name': 'US East'})
         # Create the tenant
         tenant = Tenant.objects.create(
             schema_name='test',
@@ -33,6 +38,7 @@ def test_tenant(db, django_db_blocker):
         )
     # Store the domain on the tenant object for the client fixture to use
     tenant.test_domain = tenant_domain
+    tenant.test_region = TEST_REGION
     yield tenant
     # Ensure schema is reset if any direct connection manipulation happened post-yield
     connection.set_schema_to_public()
@@ -47,6 +53,8 @@ def another_tenant(db, django_db_blocker):
     connection.set_schema_to_public()
     tenant_domain = 'another' # Different domain from test_tenant
     with django_db_blocker.unblock():
+        # Ensure the region this tenant is scoped to exists in the registry
+        Region.objects.get_or_create(code=TEST_REGION, defaults={'name': 'US East'})
         # Create the tenant with a different schema_name
         tenant = Tenant.objects.create(
             schema_name='another',
@@ -60,6 +68,7 @@ def another_tenant(db, django_db_blocker):
         )
     # Store the domain on the tenant object for the client fixture to use
     tenant.test_domain = tenant_domain
+    tenant.test_region = TEST_REGION
     yield tenant
     # Teardown handled by transaction rollback and schema reset
     connection.set_schema_to_public()
@@ -96,6 +105,7 @@ def member1(test_tenant):
     connection.set_tenant(test_tenant)
     member = Member.objects.create(
         name="Test User 1",
+        region_id=TEST_REGION,
         email="test1@example.com",
         phone="123-456-7890"
     )
@@ -108,6 +118,7 @@ def member2(test_tenant):
     connection.set_tenant(test_tenant)
     member = Member.objects.create(
         name="Test User 2",
+        region_id=TEST_REGION,
         email="test2@example.com",
         phone="098-765-4321"
     )
@@ -122,6 +133,7 @@ def member1_unit_data():
     return Member(
         id=1,
         name="Test User 1",
+        region_id=TEST_REGION,
         email="test1@example.com",
         phone="123-456-7890"
     )
@@ -132,6 +144,16 @@ def member2_unit_data():
     return Member(
         id=2,
         name="Test User 2",
+        region_id=TEST_REGION,
         email="test2@example.com",
         phone="098-765-4321"
-    ) 
+    )
+
+# --- Fixtures for Unit Tests (request stub) ---
+
+@pytest.fixture
+def mock_request(mocker):
+    """A minimal request stub carrying the validated region (set by middleware)."""
+    request = mocker.Mock()
+    request.region_id = TEST_REGION
+    return request
