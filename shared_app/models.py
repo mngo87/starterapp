@@ -13,3 +13,18 @@ class Client(TenantMixin):
 
 class Domain(DomainMixin):
     pass
+
+class Region(models.Model):
+    """Canonical registry of valid region codes (public schema, admin-managed)."""
+    code = models.CharField(max_length=50, unique=True, blank=True)
+    name = models.CharField(max_length=100)
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return self.code
+
+    def save(self, *args, **kwargs):
+        if not self.code:
+            from .regions import generate_region_code
+            self.code = generate_region_code(self.name)
+        super().save(*args, **kwargs)

@@ -3,5 +3,5 @@ from .models import Member
 
 @admin.register(Member)
 class MemberAdmin(admin.ModelAdmin):
-    list_display = ('name', 'email', 'phone', 'created_at')
-    search_fields = ('name', 'email', 'phone')
+    list_display = ('name', 'region_id', 'email', 'phone', 'created_at')
+    search_fields = ('name', 'email', 'phone', 'region_id')
